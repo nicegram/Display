@@ -1142,12 +1142,16 @@ open class ListView: ASDisplayNode, UIScrollViewAccessibilityDelegate, UIGesture
             }
         } else if let itemHighlightOverlayBackground = self.itemHighlightOverlayBackground {
             self.itemHighlightOverlayBackground = nil
+            for (_, headerNode) in self.itemHeaderNodes {
+                //self.view.bringSubview(toFront: headerNode.view)
+            }
+            //self.view.bringSubview(toFront: itemHighlightOverlayBackground.view)
+            for itemNode in self.itemNodes {
+                //self.view.bringSubview(toFront: itemNode.view)
+            }
             transition.updateAlpha(node: itemHighlightOverlayBackground, alpha: 0.0, completion: { [weak itemHighlightOverlayBackground] _ in
                 itemHighlightOverlayBackground?.removeFromSupernode()
             })
-            for (_, headerNode) in self.itemHeaderNodes {
-                self.view.bringSubview(toFront: headerNode.view)
-            }
             if let verticalScrollIndicator = self.verticalScrollIndicator {
                 verticalScrollIndicator.view.superview?.bringSubview(toFront: verticalScrollIndicator.view)
             }
@@ -1315,6 +1319,9 @@ open class ListView: ASDisplayNode, UIScrollViewAccessibilityDelegate, UIGesture
     
     public func transaction(deleteIndices: [ListViewDeleteItem], insertIndicesAndItems: [ListViewInsertItem], updateIndicesAndItems: [ListViewUpdateItem], options: ListViewDeleteAndInsertOptions, scrollToItem: ListViewScrollToItem? = nil, additionalScrollDistance: CGFloat = 0.0, updateSizeAndInsets: ListViewUpdateSizeAndInsets? = nil, stationaryItemRange: (Int, Int)? = nil, updateOpaqueState: Any?, completion: @escaping (ListViewDisplayedItemRange) -> Void = { _ in }) {
         if deleteIndices.isEmpty && insertIndicesAndItems.isEmpty && updateIndicesAndItems.isEmpty && scrollToItem == nil && updateSizeAndInsets == nil && additionalScrollDistance.isZero {
+            if let updateOpaqueState = updateOpaqueState {
+                self.opaqueTransactionState = updateOpaqueState
+            }
             completion(self.immediateDisplayedItemRange())
             return
         }
@@ -1349,6 +1356,10 @@ open class ListView: ASDisplayNode, UIScrollViewAccessibilityDelegate, UIGesture
                 self.ignoreScrollingEvents = wasIgnoringScrollingEvents
                 
                 self.updateScroller(transition: .immediate)
+                
+                if let updateOpaqueState = updateOpaqueState {
+                    self.opaqueTransactionState = updateOpaqueState
+                }
                 
                 completion()
                 return
